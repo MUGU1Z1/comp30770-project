@@ -1,105 +1,161 @@
-# COMP30770 Group Project — Amazon Electronics Review Analysis
+# Amazon Electronics Review Analysis
 
-> Identifying top-rated products and sentiment keywords from Amazon Electronics reviews using Big Data pipelines.
-
-## Group Members
-
-| Name | UCD Student ID |
-|------|---------------|
-| Yiming Chen | 22209465 |
-| Xiaoyan Li | 22207129 |
-| Enzhe Shen | 22212419 |
-| Peitao Lin | 22206283 |
+**COMP30770 – Programming for Big Data**
 
 ---
 
-## Project Overview
+## 📌 Project Overview
 
-This project analyses the [Amazon Reviews 2023](https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023) dataset (Electronics category) to:
+This project analyses the **Amazon Electronics Reviews 2023** dataset to identify:
 
-- Identify the **top 20 highest-rated products** based on verified customer reviews
-- Extract the **most frequent sentiment keywords** from review texts
-- Demonstrate the performance improvement of **Spark RDD (MapReduce)** over a traditional single-threaded Python solution
+* ⭐ Top-rated products in the Electronics category
+* 💬 Most frequent sentiment keywords in customer reviews
 
----
-
-## Datasets
-
-| File | Size | Description |
-|------|------|-------------|
-| `Electronics.jsonl` | ~2 GB | Structured review data (rating, text, timestamp, verified_purchase) |
-| `meta_Electronics.jsonl` | ~1 GB | Semi-structured product metadata (title, category, price, images) |
-
-Both files are downloaded automatically by the notebook. Not included in this repository due to size.
+We first implemented a **single-threaded baseline pipeline** in Python to establish performance metrics, and then optimised the bottleneck stages using **Spark Core (RDD-based) MapReduce**.
 
 ---
 
-## Repository Structure
+## 🎯 Project Objectives
 
-```
-comp30770-project/
-├── COMP30770_Project.ipynb     # Main notebook (all code)
-├── COMP30770_Group_Report.md   # Project report
-└── README.md                   # This file
-```
+The primary goal of this project is to demonstrate how big data techniques can improve the scalability of review analytics pipelines.
+
+Specifically, we aim to:
+
+* Build a reproducible single-machine baseline
+* Identify computational bottlenecks
+* Apply MapReduce optimisation using Spark RDD
+* Compare performance before and after optimisation
 
 ---
 
-## Requirements
+## 🗂 Dataset
 
-- Python 3.11
-- PySpark 3.5.1
-- Java 17 (required by Spark)
-- pandas, pyarrow, jupyter
+We use the **Amazon Electronics Reviews 2023** dataset:
 
-Install dependencies:
+| File                     | Size  | Description                      |
+| ------------------------ | ----- | -------------------------------- |
+| `Electronics.jsonl`      | ~2 GB | Structured customer review data  |
+| `meta_Electronics.jsonl` | ~1 GB | Semi-structured product metadata |
+
+**Big Data Justification**
+
+* Volume: Processing 500,000 reviews already incurs significant runtime on our hardware
+* Variety: The two datasets have different structures requiring different parsing strategies
+
+---
+
+## 🖥 Environment
+
+Experiments were conducted on:
+
+* CPU: Intel i5-12600KF
+* RAM: 32 GB DDR5
+* OS: Windows 11
+* Python: 3.x
+* PySpark: 3.5.1
+
+---
+
+## ⚙️ Project Pipeline
+
+### Section 2 — Traditional (Single-Threaded)
+
+The baseline pipeline consists of five steps:
+
+1. **Data Loading & Cleaning**
+2. **Aggregate Ratings per Product**
+3. **Word Frequency Analysis**
+4. **Join Reviews with Metadata**
+5. **Output Top-20 Product Ranking**
+
+**Identified Bottlenecks**
+
+* Step 3: Word frequency (CPU-bound)
+* Step 4: Metadata join (I/O-bound)
+
+---
+
+### Section 3 — MapReduce Optimisation
+
+We reimplemented the bottleneck stages using **Spark Core (RDD API)**.
+
+**Optimisations**
+
+* 🔹 Word frequency via distributed token counting
+* 🔹 Metadata join via distributed hash join
+
+---
+
+## 📊 Performance Summary
+
+| Task           | Traditional | Spark RDD | Speedup |
+| -------------- | ----------- | --------- | ------- |
+| Word Frequency | 35.41s      | 36.32s    | 0.97×   |
+| Metadata Join  | 104.62s     | 58.83s    | 1.78×   |
+
+**Key Insight**
+
+The metadata join shows meaningful improvement, while the word frequency task is affected by **Python–JVM serialisation overhead** in local mode.
+
+---
+
+## 🚀 How to Run
+
+### 1️⃣ Install dependencies
 
 ```bash
-pip install pyspark==3.5.1 pandas pyarrow jupyter
+pip install pyspark pandas pyarrow
+```
+
+### 2️⃣ Run the notebook
+
+Open:
+
+```
+comp30770-project.ipynb
+```
+
+and execute all cells in order.
+
+---
+
+## 📁 Repository Structure
+
+```
+.
+├── comp30770-project.ipynb   # Main analysis notebook
+├── data/                     # (not included in repo)
+├── report.pdf                # Final project report
+└── README.md
 ```
 
 ---
 
-## How to Run
+## 👥 Team Members
 
-1. Clone this repository:
-```bash
-git clone https://github.com/your-username/comp30770-project.git
-cd comp30770-project
-```
-
-2. Start Jupyter Notebook:
-```bash
-jupyter notebook
-```
-
-3. Open `COMP30770_Project.ipynb` and run all cells in order.
-   - The notebook will automatically download the datasets on first run (~3 GB total)
-   - Tested on Windows 11 with Intel i5-12600KF and 32 GB RAM
+* Yiming Chen
+* Xiaoyan Li
+* **Enzhe Shen**
+* Peitao Lin
 
 ---
 
-## Results Summary
+## 📜 Notes
 
-### Top 3 Highest-Rated Products (≥100 reviews)
-
-| Rank | Avg Rating | Product |
-|------|-----------|---------|
-| 1 | 4.89 | Amazon Basics High-Speed HDMI Cable 2-Pack |
-| 2 | 4.85 | Crucial RAM 16GB Kit DDR3 1600 MHz CL11 |
-| 3 | 4.85 | Lifetime 28240 Adjustable Folding Laptop Table |
-
-### Performance Comparison
-
-| Task | Traditional Python | Spark RDD | Speedup |
-|------|--------------------|-----------|---------|
-| Word Frequency | 35.41s | 36.32s | 0.97x |
-| Metadata Join | 104.62s | 58.83s | 1.78x |
+* All experiments were conducted in local mode (`local[*]`).
+* In a distributed HDFS environment, further speedup is expected.
+* The repository is intended for academic use only.
 
 ---
 
-## Notes
+## ✅ Reproducibility
 
-- The Spark optimisation was run in `local[*]` mode on a single machine (16 logical cores).
-- Below-expectation speedup for word frequency is due to `sc.parallelize()` serialisation overhead in local mode. In a distributed HDFS environment, 3–5x speedup would be expected.
-- This repository will remain public until at least May 2026 as required by the project submission guidelines.
+To reproduce the results:
+
+1. Download the Amazon Electronics dataset
+2. Place JSONL files in the working directory
+3. Run the notebook sequentially
+
+---
+
+⭐ *This project was developed as part of UCD COMP30770 Programming for Big Data.*
